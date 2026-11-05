@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+instance/*.bak
+instance/*.db-journal
+instance/check.db
+instance/demo_baseline.db
+docs/screenshots/baseline-*.png
+docs/screenshots/refactor-*.png

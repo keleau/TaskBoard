@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}服务器错误 - 任务看板系统{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="container-xxl">
+        <div class="surface-card">
+            <div class="empty-panel">
+                <i class="fas fa-triangle-exclamation"></i>
+                <h5>服务器开小差了</h5>
+                <p>请刷新页面重试，如果问题仍然存在，请检查后台日志。</p>
+                <a class="btn btn-brand mt-2"
+                   href="{{ url_for('board') if current_user.is_authenticated else url_for('login') }}">
+                    {{ '返回看板' if current_user.is_authenticated else '返回登录' }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,20 +1,16 @@
 {% extends "base.html" %}
+{% from "components/page_heading.html" import page_heading %}
 
 {% block title %}操作日志 - 任务看板系统{% endblock %}
 
 {% block content %}
 <div class="page-shell">
     <div class="container-xxl">
-        <div class="page-heading">
-            <div>
-                <span class="eyebrow">{{ 'ADMIN AUDIT LOG' if current_user.is_admin else 'MY ACTIVITY' }}</span>
-                <h1>操作日志</h1>
-                <p>{{ '全局操作记录，按时间倒序排列。' if current_user.is_admin else '仅展示你本人的操作记录，按时间倒序排列。' }}</p>
-            </div>
-            <a href="{{ url_for('board') }}" class="btn btn-light">
-                <i class="fas fa-arrow-left me-1"></i>返回看板
-            </a>
-        </div>
+        {{ page_heading(
+            'ADMIN AUDIT LOG' if current_user.is_admin else 'MY ACTIVITY',
+            '操作日志',
+            '全局操作记录，按时间倒序排列。' if current_user.is_admin else '仅展示你本人的操作记录，按时间倒序排列。'
+        ) }}
 
         <div class="surface-card log-card">
             {% if logs %}

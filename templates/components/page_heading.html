@@ -1,0 +1,12 @@
+{% macro page_heading(eyebrow, title, description) %}
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">{{ eyebrow }}</span>
+            <h1>{{ title }}</h1>
+            <p>{{ description }}</p>
+        </div>
+        <a href="{{ url_for('board') }}" class="btn btn-light">
+            <i class="fas fa-arrow-left me-1"></i>返回看板
+        </a>
+    </div>
+{% endmacro %}

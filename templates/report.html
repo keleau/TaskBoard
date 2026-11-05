@@ -1,20 +1,12 @@
 {% extends "base.html" %}
+{% from "components/page_heading.html" import page_heading %}
 
 {% block title %}数据统计 - 任务看板系统{% endblock %}
 
 {% block content %}
 <div class="page-shell">
     <div class="container-xxl">
-        <div class="page-heading">
-            <div>
-                <span class="eyebrow">ADMIN OVERVIEW</span>
-                <h1>数据统计</h1>
-                <p>全系统任务分布与完成情况，仅管理员可见。</p>
-            </div>
-            <a href="{{ url_for('board') }}" class="btn btn-light">
-                <i class="fas fa-arrow-left me-1"></i>返回看板
-            </a>
-        </div>
+        {{ page_heading('ADMIN OVERVIEW', '数据统计', '全系统任务分布与完成情况，仅管理员可见。') }}
 
         <div class="row g-3 stat-row">
             <div class="col-6 col-xl-3">

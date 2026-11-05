@@ -1,9 +1,9 @@
 {% extends "base.html" %}
+{% from "components/status_badge.html" import status_badge %}
 
 {% block title %}{{ task.title }} - 任务详情{% endblock %}
 
 {% block content %}
-{% set status_class = 'status-done' if task.column.name == '已完成' else ('status-doing' if task.column.name == '进行中' else 'status-todo') %}
 <div class="detail-hero">
     <div class="container-xxl">
         <a href="{{ url_for('board') }}" class="detail-back">
@@ -12,7 +12,7 @@
         <div class="detail-title-row">
             <div class="detail-title-main">
                 <div class="detail-flags">
-                    <span class="status-badge {{ status_class }}">{{ task.column.name }}</span>
+                    {{ status_badge(task.column.name) }}
                     <span class="priority-badge priority-{{ task.priority_class }}">
                         <i class="fas fa-flag"></i>{{ task.priority_label }}优先级
                     </span>
@@ -155,7 +155,7 @@
                     <dl class="detail-meta">
                         <div>
                             <dt>状态</dt>
-                            <dd><span class="status-badge {{ status_class }}">{{ task.column.name }}</span></dd>
+                            <dd>{{ status_badge(task.column.name) }}</dd>
                         </div>
                         <div>
                             <dt>优先级</dt>

@@ -1,0 +1,4 @@
+{% macro status_badge(column_name) %}
+    {% set state = 'done' if column_name == '已完成' else ('doing' if column_name == '进行中' else 'todo') %}
+    <span class="status-badge status-{{ state }}">{{ column_name }}</span>
+{% endmacro %}

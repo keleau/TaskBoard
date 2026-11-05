@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}页面不存在 - 任务看板系统{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="container-xxl">
+        <div class="surface-card">
+            <div class="empty-panel">
+                <i class="fas fa-compass"></i>
+                <h5>页面不存在</h5>
+                <p>你访问的地址可能已被移动或删除。</p>
+                <a class="btn btn-brand mt-2"
+                   href="{{ url_for('board') if current_user.is_authenticated else url_for('login') }}">
+                    {{ '返回看板' if current_user.is_authenticated else '返回登录' }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

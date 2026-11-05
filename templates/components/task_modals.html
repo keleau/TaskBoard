@@ -1,0 +1,53 @@
+{% from "components/forms.html" import task_fields %}
+
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0">
+            <form method="post" action="{{ url_for('create_task') }}">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="createTaskModalLabel">新增任务</h5>
+                        <p class="modal-subtitle">新任务会默认创建在「待办」列</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    {{ task_fields('create', 'create', '不填写截止时间则不会触发到期提醒。', '最多 20 个，可留空') }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-brand">
+                        <i class="fas fa-plus me-1"></i>创建任务
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0">
+            <form method="post" id="editTaskForm">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="editTaskModalLabel">
+                            编辑任务 <span class="task-id-chip" id="editTaskIdLabel"></span>
+                        </h5>
+                        <p class="modal-subtitle">状态通过在看板中拖拽卡片修改，评论在任务详情页查看</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    {{ task_fields('editTask', 'edit', '', '勾选状态会保留，清空内容即删除') }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-brand">
+                        <i class="fas fa-check me-1"></i>保存修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

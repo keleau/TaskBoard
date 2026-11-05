@@ -1,0 +1,45 @@
+<form class="filter-bar" method="get" action="{{ url_for('board') }}">
+    <div class="filter-search">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="search" name="q" value="{{ filters.q }}" maxlength="100"
+               placeholder="搜索标题、备注或标签" aria-label="搜索任务">
+    </div>
+    <select name="priority" class="form-select js-filter-select" aria-label="按优先级筛选">
+        <option value="">全部优先级</option>
+        {% for value, label in priorities.items() %}
+            <option value="{{ value }}" {% if filters.priority == (value|string) %}selected{% endif %}>优先级：{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="tag" class="form-select js-filter-select" aria-label="按标签筛选">
+        <option value="">全部标签</option>
+        {% for tag in available_tags %}
+            <option value="{{ tag.name }}" {% if filters.tag == tag.name %}selected{% endif %}># {{ tag.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="deadline" class="form-select js-filter-select" aria-label="按截止时间筛选">
+        <option value="">全部截止时间</option>
+        <option value="urgent" {% if filters.deadline == 'urgent' %}selected{% endif %}>24 小时内到期</option>
+        <option value="overdue" {% if filters.deadline == 'overdue' %}selected{% endif %}>已逾期</option>
+    </select>
+    {% if current_user.is_admin %}
+        <select name="owner" class="form-select js-filter-select" aria-label="按负责人筛选">
+            <option value="">全部负责人</option>
+            {% for owner in owners %}
+                <option value="{{ owner.id }}" {% if filters.owner == owner.id %}selected{% endif %}>{{ owner.username }}</option>
+            {% endfor %}
+        </select>
+    {% endif %}
+    <button type="submit" class="btn btn-brand filter-submit">
+        <i class="fas fa-filter me-1"></i>筛选
+    </button>
+    {% if has_filters %}
+        <a href="{{ url_for('board') }}" class="btn btn-light filter-reset">重置</a>
+    {% endif %}
+</form>
+
+{% if has_filters %}
+    <div class="filter-summary">
+        <span><i class="fas fa-filter me-1"></i>筛选出 <strong>{{ total_tasks }}</strong> 个任务，共 {{ all_total }} 个</span>
+        <a href="{{ url_for('board') }}">清除全部筛选</a>
+    </div>
+{% endif %}

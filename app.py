@@ -23,8 +23,17 @@ from models import (
     task_tag,
 )
 
+MAX_TITLE_LENGTH = 100
+MAX_TAG_LENGTH = 20
+MAX_TAGS = 5
+MAX_SUBTASKS = 20
+MAX_SUBTASK_LENGTH = 100
+MAX_COMMENT_LENGTH = 500
+MAX_LOG_LENGTH = 100
+
 app = Flask(__name__)
 app.config.from_object(Config)
+app.json.ensure_ascii = False
 os.makedirs(INSTANCE_DIR, exist_ok=True)
 db.init_app(app)
 
@@ -45,6 +54,10 @@ def unauthorized():
     flash('请先登录后再访问', 'warning')
     return redirect(url_for('login'))
 
+
+# =========================================================
+# 数据查询
+# =========================================================
 
 def visible_task_query():
     query = Task.query.filter(Task.is_deleted.is_(False))
@@ -76,8 +89,14 @@ def count_urgent_tasks(tasks=None):
     return sum(1 for task in tasks if task.is_urgent)
 
 
+# =========================================================
+# 通用写入辅助
+# =========================================================
+
 def add_log(task_id, action):
-    db.session.add(TaskLog(task_id=task_id, username=current_user.username, action=action))
+    db.session.add(
+        TaskLog(task_id=task_id, username=current_user.username, action=action[:MAX_LOG_LENGTH])
+    )
 
 
 def soft_delete_task(task):
@@ -86,6 +105,10 @@ def soft_delete_task(task):
     task.deleted_by = current_user.username
     add_log(task.id, f'把任务移入垃圾桶【{task.title}】')
 
+
+# =========================================================
+# 表单解析与校验
+# =========================================================
 
 def read_deadline():
     raw = request.form.get('deadline', '').strip()
@@ -109,15 +132,15 @@ def parse_tags(raw):
         name = part.strip()
         if not name:
             continue
-        if len(name) > 20:
-            return None, '每个标签不能超过 20 个字符'
+        if len(name) > MAX_TAG_LENGTH:
+            return None, f'每个标签不能超过 {MAX_TAG_LENGTH} 个字符'
         key = name.lower()
         if key in seen:
             continue
         seen.add(key)
         names.append(name)
-    if len(names) > 5:
-        return None, '每个任务最多设置 5 个标签'
+    if len(names) > MAX_TAGS:
+        return None, f'每个任务最多设置 {MAX_TAGS} 个标签'
     return names, None
 
 
@@ -143,8 +166,8 @@ def read_subtasks():
         return None, '子任务数据格式不正确'
     if not isinstance(items, list):
         return None, '子任务数据格式不正确'
-    if len(items) > 20:
-        return None, '每个任务最多 20 个子任务'
+    if len(items) > MAX_SUBTASKS:
+        return None, f'每个任务最多 {MAX_SUBTASKS} 个子任务'
     cleaned = []
     for item in items:
         if not isinstance(item, dict):
@@ -152,11 +175,38 @@ def read_subtasks():
         content = str(item.get('content', '')).strip()
         if not content:
             continue
-        if len(content) > 100:
-            return None, '子任务内容不能超过 100 个字符'
-        cleaned.append({'content': content, 'is_done': bool(item.get('is_done'))})
+        if len(content) > MAX_SUBTASK_LENGTH:
+            return None, f'子任务内容不能超过 {MAX_SUBTASK_LENGTH} 个字符'
+        cleaned.append({'content': content, 'is_done': item.get('is_done') is True})
     return cleaned, None
 
+
+def read_task_form():
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '').strip()
+    deadline, deadline_error = read_deadline()
+    tag_names, tag_error = parse_tags(request.form.get('tags', ''))
+    subtasks, subtask_error = read_subtasks()
+    error = deadline_error or tag_error or subtask_error
+
+    if not title:
+        error = '任务标题不能为空'
+    elif len(title) > MAX_TITLE_LENGTH:
+        error = f'任务标题不能超过 {MAX_TITLE_LENGTH} 个字符'
+
+    return {
+        'title': title,
+        'content': content,
+        'priority': read_priority(),
+        'deadline': deadline,
+        'tag_names': tag_names or [],
+        'subtasks': subtasks,
+    }, error
+
+
+# =========================================================
+# 任务写入
+# =========================================================
 
 def replace_subtasks(task, items):
     task.subtasks.clear()
@@ -194,9 +244,9 @@ def read_board_filters():
         deadline = ''
     owner = request.args.get('owner', type=int) if current_user.is_admin else None
     return {
-        'q': request.args.get('q', '').strip()[:100],
+        'q': request.args.get('q', '').strip()[:MAX_TITLE_LENGTH],
         'priority': priority,
-        'tag': request.args.get('tag', '').strip()[:20],
+        'tag': request.args.get('tag', '').strip()[:MAX_TAG_LENGTH],
         'deadline': deadline,
         'owner': owner,
     }
@@ -221,6 +271,7 @@ def apply_task_filters(query, filters):
         query = query.filter(
             Task.column_id != done_id,
             Task.deadline.isnot(None),
+            Task.deadline >= datetime.now(),
             Task.deadline <= datetime.now() + timedelta(hours=24),
         )
     elif filters['deadline'] == 'overdue' and done_id:
@@ -265,6 +316,33 @@ def apply_task_order(column_id, order_ids):
             task.position = next_position
             next_position += 1
 
+
+def create_task_from_form(form_data):
+    todo_column = BoardColumn.query.filter_by(name=COLUMN_NAMES[0]).first()
+    max_position = db.session.query(func.max(Task.position)).filter(
+        Task.column_id == todo_column.id
+    ).scalar()
+    task = Task(
+        title=form_data['title'],
+        content=form_data['content'],
+        column_id=todo_column.id,
+        owner_id=current_user.id,
+        deadline=form_data['deadline'],
+        priority=form_data['priority'],
+        position=(max_position or 0) + 1,
+    )
+    task.tags = resolve_tags(form_data['tag_names'])
+    if form_data['subtasks']:
+        replace_subtasks(task, form_data['subtasks'])
+    db.session.add(task)
+    db.session.flush()
+    add_log(task.id, f'创建任务【{task.title}】')
+    db.session.commit()
+
+
+# =========================================================
+# 页面路由
+# =========================================================
 
 @app.route('/')
 def index():
@@ -354,44 +432,18 @@ def board():
     )
 
 
+# =========================================================
+# 任务接口
+# =========================================================
+
 @app.post('/task/create')
 @login_required
 def create_task():
-    title = request.form.get('title', '').strip()
-    content = request.form.get('content', '').strip()
-    priority = read_priority()
-    deadline, deadline_error = read_deadline()
-    tag_names, tag_error = parse_tags(request.form.get('tags', ''))
-    subtasks, subtask_error = read_subtasks()
-    error = deadline_error or tag_error or subtask_error
-
-    if not title:
-        flash('任务标题不能为空', 'danger')
-    elif len(title) > 100:
-        flash('任务标题不能超过 100 个字符', 'danger')
-    elif error:
+    form_data, error = read_task_form()
+    if error:
         flash(error, 'danger')
     else:
-        todo_column = BoardColumn.query.filter_by(name=COLUMN_NAMES[0]).first()
-        max_position = db.session.query(func.max(Task.position)).filter(
-            Task.column_id == todo_column.id
-        ).scalar()
-        task = Task(
-            title=title,
-            content=content,
-            column_id=todo_column.id,
-            owner_id=current_user.id,
-            deadline=deadline,
-            priority=priority,
-            position=(max_position or 0) + 1,
-        )
-        task.tags = resolve_tags(tag_names)
-        if subtasks:
-            replace_subtasks(task, subtasks)
-        db.session.add(task)
-        db.session.flush()
-        add_log(task.id, f'创建任务【{task.title}】')
-        db.session.commit()
+        create_task_from_form(form_data)
         flash('任务创建成功', 'success')
     return redirect(url_for('board'))
 
@@ -403,36 +455,27 @@ def edit_task(task_id):
     if task is None:
         return redirect(url_for('board'))
 
-    title = request.form.get('title', '').strip()
-    content = request.form.get('content', '').strip()
-    priority = read_priority()
-    deadline, deadline_error = read_deadline()
-    tag_names, tag_error = parse_tags(request.form.get('tags', ''))
-    subtasks, subtask_error = read_subtasks()
-    error = deadline_error or tag_error or subtask_error
-
-    if not title:
-        flash('任务标题不能为空', 'danger')
-    elif len(title) > 100:
-        flash('任务标题不能超过 100 个字符', 'danger')
-    elif error:
+    form_data, error = read_task_form()
+    if error:
         flash(error, 'danger')
+        return redirect(url_for('board'))
+
+    old_title = task.title
+    task.title = form_data['title']
+    task.content = form_data['content']
+    task.priority = form_data['priority']
+    task.deadline = form_data['deadline']
+    task.tags = resolve_tags(form_data['tag_names'])
+    if form_data['subtasks'] is not None:
+        replace_subtasks(task, form_data['subtasks'])
+
+    if old_title == task.title:
+        action = f'编辑任务【{task.title}】'
     else:
-        old_title = task.title
-        task.title = title
-        task.content = content
-        task.priority = priority
-        task.deadline = deadline
-        task.tags = resolve_tags(tag_names)
-        if subtasks is not None:
-            replace_subtasks(task, subtasks)
-        if old_title == title:
-            action = f'编辑任务【{title}】'
-        else:
-            action = f'编辑任务【{old_title}】→【{title}】'
-        add_log(task.id, action)
-        db.session.commit()
-        flash('任务已更新', 'success')
+        action = f'编辑任务【{old_title}】→【{task.title}】'
+    add_log(task.id, action)
+    db.session.commit()
+    flash('任务已更新', 'success')
     return redirect(url_for('board'))
 
 
@@ -447,6 +490,10 @@ def delete_task(task_id):
     flash('任务已移入垃圾桶，可在垃圾桶中恢复', 'info')
     return redirect(url_for('board'))
 
+
+# =========================================================
+# 垃圾桶
+# =========================================================
 
 @app.post('/task/<int:task_id>/trash')
 @login_required
@@ -471,7 +518,7 @@ def trash_task(task_id):
 @app.route('/trash')
 @login_required
 def trash():
-    keyword = request.args.get('q', '').strip()[:100]
+    keyword = request.args.get('q', '').strip()[:MAX_TITLE_LENGTH]
     query = trash_task_query()
     if keyword:
         like = f'%{keyword}%'
@@ -609,8 +656,8 @@ def add_comment(task_id):
     content = request.form.get('content', '').strip()
     if not content:
         flash('评论内容不能为空', 'danger')
-    elif len(content) > 500:
-        flash('评论内容不能超过 500 个字符', 'danger')
+    elif len(content) > MAX_COMMENT_LENGTH:
+        flash(f'评论内容不能超过 {MAX_COMMENT_LENGTH} 个字符', 'danger')
     else:
         db.session.add(TaskComment(task_id=task.id, user_id=current_user.id, content=content))
         add_log(task.id, f'评论了任务【{task.title}】')
@@ -692,6 +739,34 @@ def report():
         overdue=overdue,
         stats=stats,
     )
+
+
+# =========================================================
+# 初始化与错误页
+# =========================================================
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    return response
+
+
+@app.context_processor
+def inject_globals():
+    return {'current_year': datetime.now().year}
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('errors/404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('errors/500.html'), 500
 
 
 def migrate_schema():

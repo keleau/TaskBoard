@@ -1,0 +1,52 @@
+{% macro task_fields(title_prefix, field_prefix, deadline_hint='', subtask_hint='') %}
+    {% set title_id = title_prefix ~ 'Title' %}
+    {% set content_id = title_prefix ~ 'Content' %}
+    {% set priority_id = field_prefix ~ 'Priority' %}
+    {% set deadline_id = field_prefix ~ 'Deadline' %}
+    {% set tags_id = field_prefix ~ 'Tags' %}
+    {% set subtasks_id = field_prefix ~ 'Subtasks' %}
+
+    <div class="mb-3">
+        <label for="{{ title_id }}" class="form-label">任务标题</label>
+        <input type="text" class="form-control" id="{{ title_id }}" name="title"
+               maxlength="100" placeholder="例如：完成课程设计报告" required>
+    </div>
+    <div class="mb-3">
+        <label for="{{ content_id }}" class="form-label">详细备注</label>
+        <textarea class="form-control" id="{{ content_id }}" name="content" rows="3"
+                  placeholder="补充任务说明（选填）"></textarea>
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-sm-5">
+            <label for="{{ priority_id }}" class="form-label">优先级</label>
+            <select class="form-select" id="{{ priority_id }}" name="priority">
+                <option value="2">高优先级</option>
+                <option value="1" selected>中优先级</option>
+                <option value="0">低优先级</option>
+            </select>
+        </div>
+        <div class="col-sm-7">
+            <label for="{{ deadline_id }}" class="form-label">截止时间</label>
+            <input type="datetime-local" class="form-control" id="{{ deadline_id }}" name="deadline">
+            {% if deadline_hint %}
+                <div class="form-text">{{ deadline_hint }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="{{ tags_id }}" class="form-label">标签</label>
+        <input type="text" class="form-control" id="{{ tags_id }}" name="tags" maxlength="120"
+               placeholder="用逗号分隔，最多 5 个">
+    </div>
+    <div class="mb-1">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <label class="form-label mb-0">子任务清单</label>
+            <span class="form-text">{{ subtask_hint }}</span>
+        </div>
+        <div class="subtask-editor" id="{{ subtasks_id }}" data-subtask-editor></div>
+        <button type="button" class="btn btn-sm btn-subtask-add js-add-subtask">
+            <i class="fas fa-plus me-1"></i>添加子任务
+        </button>
+        <input type="hidden" name="subtasks">
+    </div>
+{% endmacro %}

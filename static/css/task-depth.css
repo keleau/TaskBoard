@@ -726,3 +726,16 @@
         width: 100%;
     }
 }
+
+/* 移动端任务详情：三个操作按钮保持单行 */
+@media (max-width: 575.98px) {
+    .detail-actions {
+        gap: .4rem;
+    }
+
+    .detail-actions .btn {
+        padding: .52rem .5rem;
+        font-size: .76rem;
+        white-space: nowrap;
+    }
+}

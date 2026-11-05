@@ -1,0 +1,83 @@
+<article class="task-card task-priority-{{ task.priority_class }}{% if task.is_urgent %} task-urgent{% endif %}"
+         data-task-id="{{ task.id }}"
+         data-title="{{ task.title }}"
+         data-content="{{ task.content }}"
+         data-priority="{{ task.priority }}"
+         data-tags="{{ task.tag_names }}"
+         data-deadline="{{ task.deadline.strftime('%Y-%m-%dT%H:%M') if task.deadline else '' }}"
+         data-subtasks='{{ task.subtasks_payload|tojson }}'
+         data-edit-url="{{ url_for('edit_task', task_id=task.id) }}"
+         aria-labelledby="task-title-{{ task.id }}">
+    <div class="task-topline">
+        <div class="task-flags">
+            <span class="priority-badge priority-{{ task.priority_class }}">
+                <i class="fas fa-flag"></i>{{ task.priority_label }}
+            </span>
+            {% if task.is_urgent %}
+                <span class="badge-urgent">
+                    <i class="fas fa-circle-exclamation"></i>{{ task.deadline_label }}
+                </span>
+            {% endif %}
+        </div>
+        <div class="task-actions js-no-drag">
+            <button type="button" class="task-icon-btn focus-btn" title="开始番茄专注"
+                    aria-label="开始番茄专注：{{ task.title }}" data-focus-task="{{ task.title }}">
+                <i class="fas fa-stopwatch"></i>
+            </button>
+            <button type="button" class="task-icon-btn" title="编辑任务"
+                    aria-label="编辑任务：{{ task.title }}"
+                    data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                <i class="fas fa-pen"></i>
+            </button>
+            <form method="post" action="{{ url_for('delete_task', task_id=task.id) }}"
+                  onsubmit="return confirm('任务会移入垃圾桶，可在垃圾桶中恢复。确定继续吗？');">
+                <button type="submit" class="task-icon-btn delete-btn" title="移入垃圾桶"
+                        aria-label="移入垃圾桶：{{ task.title }}">
+                    <i class="fas fa-trash-can"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    <h3 class="task-title" id="task-title-{{ task.id }}">
+        <a href="{{ url_for('task_detail', task_id=task.id) }}" class="js-no-drag">{{ task.title }}</a>
+    </h3>
+    {% if task.content %}
+        <p class="task-content">{{ task.content }}</p>
+    {% endif %}
+    {% if task.tags %}
+        <div class="task-tags js-no-drag">
+            {% for tag in task.tags %}
+                <a class="tag-chip tag-color-{{ tag.color_index }}"
+                   href="{{ url_for('board', q=(filters.q or None), priority=(filters.priority or None), deadline=(filters.deadline or None), owner=(filters.owner or None), tag=tag.name) }}">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="task-meta">
+        {% if task.deadline %}
+            <span class="task-deadline">
+                <i class="far fa-clock"></i>{{ task.deadline.strftime('%m-%d %H:%M') }}
+            </span>
+        {% endif %}
+        {% if task.subtask_total %}
+            <span class="task-subtask">
+                <i class="fas fa-list-check"></i>{{ task.subtask_done_count }}/{{ task.subtask_total }}
+            </span>
+        {% endif %}
+        {% if task.comment_count %}
+            <a class="task-comment-count js-no-drag"
+               href="{{ url_for('task_detail', task_id=task.id) }}#comments">
+                <i class="far fa-comment-dots"></i>{{ task.comment_count }}
+            </a>
+        {% endif %}
+        {% if task.is_done and task.finish_time %}
+            <span class="task-finish">
+                <i class="fas fa-circle-check"></i>{{ task.finish_time.strftime('%m-%d %H:%M') }} 完成
+            </span>
+        {% endif %}
+        {% if current_user.is_admin %}
+            <span class="task-owner">
+                <i class="far fa-user"></i>{{ task.owner.username }}
+            </span>
+        {% endif %}
+    </div>
+</article>

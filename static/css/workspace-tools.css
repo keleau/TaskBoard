@@ -795,3 +795,57 @@ body.board-page .toast-stack {
         left: 1rem;
     }
 }
+
+/* 悬浮番茄钟使用圆形图标，避免遮挡看板卡片 */
+.pomodoro-fab {
+    position: relative;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    gap: .25rem;
+}
+
+.pomodoro-fab-label {
+    display: none;
+}
+
+.pomodoro-fab.is-running > i,
+.pomodoro-fab.is-paused > i {
+    display: none;
+}
+
+.pomodoro-fab-time {
+    font-size: .64rem;
+}
+
+.pomodoro-fab.is-running::before {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+@media (max-width: 575.98px) {
+    .pomodoro-fab {
+        width: 44px;
+        height: 44px;
+    }
+
+    .board-trash {
+        right: .75rem;
+        bottom: .75rem;
+    }
+
+    .board-area,
+    .detail-area,
+    .page-shell {
+        padding-bottom: 5rem;
+    }
+}
+
+/* 非看板页的番茄钟放在右侧，避开左侧的表单与子任务 */
+body:not(.board-page) .pomodoro {
+    left: auto;
+    right: 1rem;
+}

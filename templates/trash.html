@@ -1,20 +1,17 @@
 {% extends "base.html" %}
+{% from "components/page_heading.html" import page_heading %}
+{% from "components/status_badge.html" import status_badge %}
 
 {% block title %}垃圾桶 - 任务看板系统{% endblock %}
 
 {% block content %}
 <div class="page-shell">
     <div class="container-xxl">
-        <div class="page-heading">
-            <div>
-                <span class="eyebrow">RECYCLE BIN</span>
-                <h1>垃圾桶</h1>
-                <p>{{ '所有用户已删除的任务，可恢复或彻底删除。' if current_user.is_admin else '这里只显示你删除的任务，可恢复或彻底删除。' }}</p>
-            </div>
-            <a href="{{ url_for('board') }}" class="btn btn-light">
-                <i class="fas fa-arrow-left me-1"></i>返回看板
-            </a>
-        </div>
+        {{ page_heading(
+            'RECYCLE BIN',
+            '垃圾桶',
+            '所有用户已删除的任务，可恢复或彻底删除。' if current_user.is_admin else '这里只显示你删除的任务，可恢复或彻底删除。'
+        ) }}
 
         <div class="trash-note">
             <i class="fas fa-circle-info"></i>
@@ -79,7 +76,7 @@
                                             {% endif %}
                                         </div>
                                     </td>
-                                    <td><span class="status-badge status-{{ 'done' if task.column.name == '已完成' else ('doing' if task.column.name == '进行中' else 'todo') }}">{{ task.column.name }}</span></td>
+                                    <td>{{ status_badge(task.column.name) }}</td>
                                     {% if current_user.is_admin %}
                                         <td>
                                             <div class="log-user">
