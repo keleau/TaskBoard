@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 任务看板系统{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <aside class="auth-side auth-side-register">
+            <span class="auth-badge"><i class="fas fa-user-plus me-2"></i>加入任务看板</span>
+            <h1>从一列待办<br>开始今天。</h1>
+            <p class="auth-lead">注册后即可创建属于自己的任务看板，进度、截止时间与操作记录一目了然。</p>
+            <div class="auth-quote">
+                <i class="fas fa-quote-left"></i>
+                <p>清晰的边界，比更长的待办清单更有用。</p>
+            </div>
+        </aside>
+
+        <section class="auth-form">
+            <span class="eyebrow">CREATE ACCOUNT</span>
+            <h2>创建账号</h2>
+            <p class="auth-subtitle">只需用户名和密码，马上开始使用。</p>
+
+            <form method="post" action="{{ url_for('register') }}" class="auth-form-body">
+                <div class="mb-3">
+                    <label for="username" class="form-label">用户名</label>
+                    <input type="text" class="form-control form-control-lg" id="username" name="username"
+                           value="{{ request.form.get('username', '') }}" minlength="3" maxlength="20"
+                           autocomplete="username" placeholder="3 - 20 个字符" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">密码</label>
+                    <input type="password" class="form-control form-control-lg" id="password" name="password"
+                           minlength="5" maxlength="64" autocomplete="new-password"
+                           placeholder="至少 5 个字符" required>
+                </div>
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label">确认密码</label>
+                    <input type="password" class="form-control form-control-lg" id="confirm_password"
+                           name="confirm_password" minlength="5" maxlength="64"
+                           autocomplete="new-password" placeholder="再次输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-brand btn-lg w-100">
+                    注册账号<i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </form>
+
+            <p class="auth-switch">已有账号？<a href="{{ url_for('login') }}">返回登录</a></p>
+        </section>
+    </div>
+</div>
+{% endblock %}

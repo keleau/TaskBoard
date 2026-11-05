@@ -1,0 +1,68 @@
+<nav class="navbar navbar-expand-lg navbar-dark site-navbar sticky-top">
+    <div class="container-xxl">
+        <a class="navbar-brand" href="{{ url_for('board') if current_user.is_authenticated else url_for('login') }}">
+            <span class="brand-icon"><i class="fas fa-table-columns"></i></span>
+            <span>任务看板</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="切换导航">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            {% if current_user.is_authenticated %}
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'board' %}active{% endif %}" href="{{ url_for('board') }}">
+                            <i class="fas fa-list-check me-1"></i>看板
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'logs' %}active{% endif %}" href="{{ url_for('logs') }}">
+                            <i class="fas fa-clock-rotate-left me-1"></i>操作日志
+                        </a>
+                    </li>
+                    {% if current_user.is_admin %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'report' %}active{% endif %}" href="{{ url_for('report') }}">
+                                <i class="fas fa-chart-pie me-1"></i>数据统计
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <div class="dropdown user-area">
+                    <a class="user-chip dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="avatar">{{ current_user.username[0] }}</span>
+                        <span class="user-name">{{ current_user.username }}</span>
+                        {% if current_user.is_admin %}<span class="role-badge">管理员</span>{% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><span class="dropdown-header">当前身份：{{ '管理员' if current_user.is_admin else '普通用户' }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{{ url_for('logout') }}">
+                                <button type="submit" class="dropdown-item logout-item">
+                                    <i class="fas fa-right-from-bracket me-2"></i>退出登录
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">
+                            <i class="fas fa-arrow-right-to-bracket me-1"></i>登录
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="nav-link nav-cta" href="{{ url_for('register') }}">
+                            <i class="fas fa-user-plus me-1"></i>注册
+                        </a>
+                    </li>
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,54 @@
+<div class="pomodoro" id="pomodoro" data-mode="focus" data-user="{{ current_user.username }}">
+    <section class="pomodoro-panel" id="pomodoroPanel" aria-label="番茄专注计时器" aria-hidden="true">
+        <header class="pomodoro-head">
+            <div>
+                <span class="eyebrow">FOCUS TIMER</span>
+                <h6>番茄专注</h6>
+            </div>
+            <button type="button" class="pomodoro-close" data-pomodoro-close aria-label="收起番茄钟">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </header>
+
+        <div class="pomodoro-modes" role="group" aria-label="计时模式">
+            <button type="button" class="is-active" data-pomodoro-mode="focus">专注 25</button>
+            <button type="button" data-pomodoro-mode="short">短休 5</button>
+            <button type="button" data-pomodoro-mode="long">长休 15</button>
+        </div>
+
+        <div class="pomodoro-dial">
+            <svg class="pomodoro-ring" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+                <circle class="ring-progress" id="pomodoroRing" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <div class="pomodoro-dial-text">
+                <strong id="pomodoroTime">25:00</strong>
+                <span id="pomodoroState">准备专注</span>
+            </div>
+        </div>
+
+        <p class="pomodoro-task" id="pomodoroTask" hidden>
+            <i class="fas fa-link"></i><span></span>
+        </p>
+
+        <div class="pomodoro-actions">
+            <button type="button" class="btn btn-brand pomodoro-primary" id="pomodoroStart">
+                <i class="fas fa-play"></i><span>开始</span>
+            </button>
+            <button type="button" class="pomodoro-reset" id="pomodoroReset" title="重置计时" aria-label="重置计时">
+                <i class="fas fa-rotate-left"></i>
+            </button>
+        </div>
+
+        <footer class="pomodoro-foot">
+            <span><i class="fas fa-circle-check"></i>今日完成 <strong id="pomodoroCount">0</strong> 个</span>
+            <span><i class="fas fa-clock"></i><strong id="pomodoroMinutes">0</strong> 分钟</span>
+        </footer>
+    </section>
+
+    <button type="button" class="pomodoro-fab" id="pomodoroFab" aria-controls="pomodoroPanel" aria-expanded="false">
+        <i class="fas fa-stopwatch"></i>
+        <span class="pomodoro-fab-label">番茄钟</span>
+        <span class="pomodoro-fab-time" id="pomodoroFabTime">25:00</span>
+    </button>
+</div>

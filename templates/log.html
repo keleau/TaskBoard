@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}操作日志 - 任务看板系统{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="container-xxl">
+        <div class="page-heading">
+            <div>
+                <span class="eyebrow">{{ 'ADMIN AUDIT LOG' if current_user.is_admin else 'MY ACTIVITY' }}</span>
+                <h1>操作日志</h1>
+                <p>{{ '全局操作记录，按时间倒序排列。' if current_user.is_admin else '仅展示你本人的操作记录，按时间倒序排列。' }}</p>
+            </div>
+            <a href="{{ url_for('board') }}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-1"></i>返回看板
+            </a>
+        </div>
+
+        <div class="surface-card log-card">
+            {% if logs %}
+                <div class="table-responsive">
+                    <table class="table log-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>操作时间</th>
+                                <th>操作人</th>
+                                <th>操作内容</th>
+                                <th class="text-end">任务</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                                <tr>
+                                    <td class="log-time">
+                                        <span class="log-date">{{ log.operate_time.strftime('%Y-%m-%d') }}</span>
+                                        <span class="log-clock">{{ log.operate_time.strftime('%H:%M:%S') }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="log-user">
+                                            <span class="avatar-sm">{{ log.username[0] }}</span>
+                                            <span>{{ log.username }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="log-action">{{ log.action }}</td>
+                                    <td class="text-end">
+                                        <span class="task-id-chip">#{{ log.task_id }}</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="log-footnote">
+                    <i class="fas fa-circle-info me-1"></i>共 {{ logs|length }} 条记录，数据变更全程可追溯。
+                </div>
+            {% else %}
+                <div class="empty-panel">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <h5>还没有操作记录</h5>
+                    <p>创建或拖动任务后，日志会自动出现在这里。</p>
+                    <a href="{{ url_for('board') }}" class="btn btn-brand mt-2">去看板创建任务</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

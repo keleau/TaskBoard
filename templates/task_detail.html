@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} - 任务详情{% endblock %}
+
+{% block content %}
+{% set status_class = 'status-done' if task.column.name == '已完成' else ('status-doing' if task.column.name == '进行中' else 'status-todo') %}
+<div class="detail-hero">
+    <div class="container-xxl">
+        <a href="{{ url_for('board') }}" class="detail-back">
+            <i class="fas fa-arrow-left me-1"></i>返回看板
+        </a>
+        <div class="detail-title-row">
+            <div class="detail-title-main">
+                <div class="detail-flags">
+                    <span class="status-badge {{ status_class }}">{{ task.column.name }}</span>
+                    <span class="priority-badge priority-{{ task.priority_class }}">
+                        <i class="fas fa-flag"></i>{{ task.priority_label }}优先级
+                    </span>
+                    {% if task.is_urgent %}
+                        <span class="badge-urgent">
+                            <i class="fas fa-circle-exclamation"></i>{{ task.deadline_label }}
+                        </span>
+                    {% endif %}
+                </div>
+                <h1>{{ task.title }}</h1>
+                <p class="detail-byline">
+                    由 <strong>{{ task.owner.username }}</strong> 创建于 {{ task.create_time.strftime('%Y-%m-%d %H:%M') }}
+                    {% if task.finish_time %}
+                        <span class="byline-dot">·</span>完成于 {{ task.finish_time.strftime('%Y-%m-%d %H:%M') }}
+                    {% endif %}
+                </p>
+                {% if task.tags %}
+                    <div class="detail-tags">
+                        {% for tag in task.tags %}
+                            <a class="tag-chip tag-color-{{ tag.color_index }}" href="{{ url_for('board', tag=tag.name) }}">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="detail-actions">
+                <a href="{{ url_for('board', edit=task.id) }}" class="btn btn-brand">
+                    <i class="fas fa-pen me-1"></i>编辑任务
+                </a>
+                <button type="button" class="btn btn-focus" data-focus-task="{{ task.title }}">
+                    <i class="fas fa-stopwatch me-1"></i>开始专注
+                </button>
+                <form method="post" action="{{ url_for('delete_task', task_id=task.id) }}"
+                      onsubmit="return confirm('任务会移入垃圾桶，可在垃圾桶中恢复。确定继续吗？');">
+                    <button type="submit" class="btn btn-delete">
+                        <i class="fas fa-trash-can me-1"></i>移入垃圾桶
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="detail-area">
+    <div class="container-xxl">
+        <div class="row g-4">
+            <div class="col-xl-8">
+                <div class="surface-card detail-card">
+                    <div class="card-head">
+                        <div>
+                            <h5>任务备注</h5>
+                            <p>任务的背景、验收标准或补充说明</p>
+                        </div>
+                    </div>
+                    {% if task.content %}
+                        <p class="detail-content">{{ task.content }}</p>
+                    {% else %}
+                        <p class="detail-muted">暂无备注</p>
+                    {% endif %}
+                </div>
+
+                <div class="surface-card detail-card" id="subtasks">
+                    <div class="card-head">
+                        <div>
+                            <h5>子任务清单</h5>
+                            <p>{{ task.subtask_done_count }} / {{ task.subtask_total }} 已完成</p>
+                        </div>
+                        <span class="soft-badge">{{ task.subtask_percent }}%</span>
+                    </div>
+                    {% if task.subtask_total %}
+                        <div class="detail-progress">
+                            <div class="progress" role="progressbar" aria-label="子任务完成进度"
+                                 aria-valuenow="{{ task.subtask_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar" style="width: {{ task.subtask_percent }}%"></div>
+                            </div>
+                        </div>
+                        <div class="subtask-list">
+                            {% for subtask in task.subtasks %}
+                                <div class="subtask-item {% if subtask.is_done %}is-done{% endif %}">
+                                    <form method="post" action="{{ url_for('toggle_subtask', subtask_id=subtask.id) }}">
+                                        <button type="submit" class="subtask-check" title="{{ '标记为未完成' if subtask.is_done else '标记为已完成' }}">
+                                            <i class="fas {{ 'fa-circle-check' if subtask.is_done else 'fa-circle' }}"></i>
+                                        </button>
+                                    </form>
+                                    <span class="subtask-text">{{ subtask.content }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="detail-muted mb-0">暂无子任务，可在编辑任务时添加。</p>
+                    {% endif %}
+                </div>
+
+                <div class="surface-card detail-card" id="comments">
+                    <div class="card-head">
+                        <div>
+                            <h5>评论</h5>
+                            <p>共 {{ task.comment_count }} 条讨论</p>
+                        </div>
+                    </div>
+                    {% if task.comments %}
+                        <div class="comment-list">
+                            {% for comment in task.comments %}
+                                <div class="comment-item">
+                                    <span class="avatar-sm">{{ comment.author.username[0] }}</span>
+                                    <div class="comment-main">
+                                        <div class="comment-head">
+                                            <strong>{{ comment.author.username }}</strong>
+                                            <span>{{ comment.create_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                                        </div>
+                                        <p class="comment-body">{{ comment.content }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="detail-muted">还没有评论，写下第一条讨论吧。</p>
+                    {% endif %}
+                    <form method="post" action="{{ url_for('add_comment', task_id=task.id) }}" class="comment-form">
+                        <label for="commentContent" class="form-label">添加评论</label>
+                        <textarea class="form-control" id="commentContent" name="content" rows="3"
+                                  maxlength="500" placeholder="补充进展、提出问题或留下交接说明……" required></textarea>
+                        <div class="comment-form-foot">
+                            <span class="form-text">最多 500 个字符</span>
+                            <button type="submit" class="btn btn-brand">
+                                <i class="fas fa-paper-plane me-1"></i>发布评论
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="surface-card detail-card">
+                    <div class="card-head">
+                        <div>
+                            <h5>任务信息</h5>
+                            <p>当前状态与时间节点</p>
+                        </div>
+                    </div>
+                    <dl class="detail-meta">
+                        <div>
+                            <dt>状态</dt>
+                            <dd><span class="status-badge {{ status_class }}">{{ task.column.name }}</span></dd>
+                        </div>
+                        <div>
+                            <dt>优先级</dt>
+                            <dd>
+                                <span class="priority-badge priority-{{ task.priority_class }}">
+                                    <i class="fas fa-flag"></i>{{ task.priority_label }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>负责人</dt>
+                            <dd>{{ task.owner.username }}{% if task.owner.is_admin %} <span class="role-badge role-badge-light">管理员</span>{% endif %}</dd>
+                        </div>
+                        <div>
+                            <dt>截止时间</dt>
+                            <dd class="{% if task.is_urgent %}text-danger{% endif %}">
+                                {{ task.deadline.strftime('%Y-%m-%d %H:%M') if task.deadline else '未设置' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>创建时间</dt>
+                            <dd>{{ task.create_time.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        </div>
+                        <div>
+                            <dt>完成时间</dt>
+                            <dd>{{ task.finish_time.strftime('%Y-%m-%d %H:%M') if task.finish_time else '未完成' }}</dd>
+                        </div>
+                        <div>
+                            <dt>子任务</dt>
+                            <dd>{{ task.subtask_done_count }} / {{ task.subtask_total }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="surface-card detail-card">
+                    <div class="card-head">
+                        <div>
+                            <h5>最近活动</h5>
+                            <p>该任务最近 20 条操作</p>
+                        </div>
+                    </div>
+                    {% if task_logs %}
+                        <div class="activity-list">
+                            {% for log in task_logs %}
+                                <div class="activity-item">
+                                    <span class="activity-dot"><i class="fas fa-clock-rotate-left"></i></span>
+                                    <div>
+                                        <p class="activity-action">{{ log.action }}</p>
+                                        <span class="activity-meta">{{ log.username }} · {{ log.operate_time.strftime('%m-%d %H:%M') }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="detail-muted mb-0">暂无操作记录。</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

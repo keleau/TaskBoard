@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 任务看板系统{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <aside class="auth-side">
+            <span class="auth-badge"><i class="fas fa-bolt me-2"></i>轻量 · 直观 · 可追溯</span>
+            <h1>把任务<br>拖到完成。</h1>
+            <p class="auth-lead">三列看板承载任务流转，拖拽即更新状态，每一次变化都自动留痕。</p>
+            <ul class="auth-features">
+                <li><i class="fas fa-table-columns"></i><span>待办 / 进行中 / 已完成三列看板</span></li>
+                <li><i class="fas fa-hand-pointer"></i><span>拖拽卡片，无刷新切换任务状态</span></li>
+                <li><i class="fas fa-clock"></i><span>临近截止任务自动标红提醒</span></li>
+                <li><i class="fas fa-chart-pie"></i><span>管理员可查看全局进度统计</span></li>
+            </ul>
+        </aside>
+
+        <section class="auth-form">
+            <span class="eyebrow">TASK BOARD</span>
+            <h2>登录</h2>
+            <p class="auth-subtitle">使用你的账号继续管理任务。</p>
+
+            <form method="post" action="{{ url_for('login') }}" class="auth-form-body">
+                <div class="mb-3">
+                    <label for="username" class="form-label">用户名</label>
+                    <input type="text" class="form-control form-control-lg" id="username" name="username"
+                           value="{{ request.form.get('username', '') }}" autocomplete="username"
+                           placeholder="请输入用户名" required autofocus>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label">密码</label>
+                    <input type="password" class="form-control form-control-lg" id="password" name="password"
+                           autocomplete="current-password" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-brand btn-lg w-100">
+                    登录看板<i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </form>
+
+            <div class="demo-hint">
+                <i class="fas fa-user-shield me-2"></i>管理员演示账号
+                <code>admin</code> / <code>admin123</code>
+            </div>
+
+            <p class="auth-switch">还没有账号？<a href="{{ url_for('register') }}">立即注册</a></p>
+        </section>
+    </div>
+</div>
+{% endblock %}
